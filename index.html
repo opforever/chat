@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-time Chat</title>
     <script type="module">
-        // IMPORTANT: Replace this with your own Firebase project configuration.
+        // Your "Dev Apps" Firebase project configuration is now embedded.
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+          apiKey: "AIzaSyCc3e__RFg81ZD_hjap63V0w6wCAp2iIZU",
+          authDomain: "dev-apps-d3c3e.firebaseapp.com",
+          projectId: "dev-apps-d3c3e",
+          storageBucket: "dev-apps-d3c3e.appspot.com",
+          messagingSenderId: "603825738755",
+          appId: "1:603825738755:web:0f0601020d17ae6fdfea36",
+          measurementId: "G-46VVE0LXV2"
         };
         window.__firebase_config = JSON.stringify(firebaseConfig);
 
@@ -232,10 +233,14 @@
                 messages: document.getElementById('messages'),
                 form: document.getElementById('form'),
                 messageInput: document.getElementById('message-input'),
+                sendBtn: document.getElementById('send-btn'),
             };
 
             let db, auth, userId, displayName;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-chat-app';
+            
+            const appName = 'chat-app'; 
+            
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-instance-id';
 
             try {
                 const firebaseConfig = JSON.parse(window.__firebase_config);
@@ -244,7 +249,7 @@
                 auth = getAuth(app);
             } catch (error) {
                 console.error("Firebase Init Error:", error);
-                alert("Could not connect to the service.");
+                alert("Could not connect to the service. Have you pasted your firebaseConfig keys?");
             }
 
             ui.joinBtn.addEventListener('click', async () => {
@@ -261,36 +266,52 @@
             });
 
             async function signInAndStart() {
-                await signInAnonymously(auth);
-                onAuthStateChanged(auth, user => {
-                    if (user) {
-                        userId = user.uid;
-                        listenForMessages();
-                    }
-                });
+                try {
+                    await signInAnonymously(auth);
+                    onAuthStateChanged(auth, user => {
+                        if (user) {
+                            userId = user.uid;
+                            listenForMessages();
+                        }
+                    });
+                } catch (error) {
+                    console.error("Authentication Error:", error);
+                    alert("Authentication failed. Please ensure your Firebase configuration is correct and you have enabled Anonymous Authentication in your Firebase project console.");
+                    ui.messageInput.disabled = true;
+                    ui.sendBtn.disabled = true;
+                    ui.messageInput.placeholder = "Authentication failed.";
+                }
             }
 
             ui.form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const messageText = ui.messageInput.value.trim();
 
-                if (messageText) {
-                    await addDoc(collection(db, `artifacts/${appId}/public/data/messages`), {
-                        text: messageText,
-                        sender: displayName,
-                        uid: userId,
-                        createdAt: serverTimestamp()
-                    });
-                    ui.messageInput.value = '';
+                if (messageText && userId) {
+                    try {
+                        await addDoc(collection(db, `artifacts/${appName}/${appId}/public/data/messages`), {
+                            text: messageText,
+                            sender: displayName,
+                            uid: userId,
+                            createdAt: serverTimestamp()
+                        });
+                        ui.messageInput.value = '';
+                    } catch (error) {
+                         console.error("Error sending message:", error);
+                         alert("Could not send message.");
+                    }
+                } else if (!userId) {
+                    console.error("Cannot send message, user is not authenticated.");
+                    alert("Cannot send message. You are not connected to the chat service.");
                 }
             });
 
             function listenForMessages() {
-                const messagesRef = collection(db, `artifacts/${appId}/public/data/messages`);
+                const messagesRef = collection(db, `artifacts/${appName}/${appId}/public/data/messages`);
                 const q = query(messagesRef, orderBy("createdAt"));
 
                 onSnapshot(q, (snapshot) => {
-                    const shouldScroll = ui.messages.scrollTop + ui.messages.clientHeight === ui.messages.scrollHeight;
+                    const shouldScroll = ui.messages.scrollTop + ui.messages.clientHeight >= ui.messages.scrollHeight - 50;
                     
                     snapshot.docChanges().forEach(change => {
                         if (change.type === "added") {
@@ -320,7 +341,7 @@
                         }
                     });
 
-                    if(shouldScroll || snapshot.docChanges().some(change => change.doc.data().uid === userId)) {
+                    if(shouldScroll || snapshot.docChanges().some(change => change.type === 'added' && change.doc.data().uid === userId)) {
                         ui.messages.scrollTop = ui.messages.scrollHeight;
                     }
                 });
@@ -329,3 +350,4 @@
     </script>
 </body>
 </html>
+
