@@ -23,19 +23,21 @@
     </script>
     <style>
         :root {
-            --bg-color-light: #f4f4f8;
-            --surface-color-light: #ffffff;
+            --bg-color-light: #e9e9ef;
+            --surface-color-light: rgba(255, 255, 255, 0.8);
             --text-primary-light: #121212;
             --text-secondary-light: #5f5f5f;
-            --accent-light: #3498db;
+            --accent-light: #007aff;
             --border-light: #e0e0e0;
+            --bubble-bg-light: #f0f0f0;
 
-            --bg-color-dark: #121212;
-            --surface-color-dark: #1e1e1e;
-            --text-primary-dark: #e0e0e0;
-            --text-secondary-dark: #a0a0a0;
-            --accent-dark: #bb86fc;
-            --border-dark: #2c2c2c;
+            --bg-color-dark: #1c1c1e;
+            --surface-color-dark: rgba(44, 44, 46, 0.7);
+            --text-primary-dark: #ffffff;
+            --text-secondary-dark: #8e8e93;
+            --accent-dark: #0a84ff;
+            --border-dark: #3a3a3c;
+            --bubble-bg-dark: #2c2c2e;
         }
 
         @media (prefers-color-scheme: light) {
@@ -46,6 +48,7 @@
                 --text-secondary: var(--text-secondary-light);
                 --accent: var(--accent-light);
                 --border: var(--border-light);
+                --bubble-bg: var(--bubble-bg-light);
             }
         }
 
@@ -57,6 +60,7 @@
                 --text-secondary: var(--text-secondary-dark);
                 --accent: var(--accent-dark);
                 --border: var(--border-dark);
+                --bubble-bg: var(--bubble-bg-dark);
             }
         }
         
@@ -69,12 +73,13 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            background-color: var(--bg-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            overflow: hidden;
         }
 
         #app {
@@ -85,14 +90,16 @@
             max-width: 800px;
             max-height: 100vh;
             background-color: var(--surface-color);
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         }
 
         @media (min-width: 600px) {
             #app {
                 max-height: 90vh;
-                border-radius: 12px;
-                border: 1px solid var(--border);
+                border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
             }
         }
 
@@ -124,7 +131,7 @@
             border: none;
             border-radius: 8px;
             background-color: var(--accent);
-            color: var(--surface-color);
+            color: white;
         }
 
         /* Main Chat Screen */
@@ -139,6 +146,9 @@
             padding: 1rem;
             border-bottom: 1px solid var(--border);
             font-weight: bold;
+            background-color: var(--surface-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
 
         #messages {
@@ -147,53 +157,97 @@
             padding: 1rem;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
         }
 
         .message {
             display: flex;
-            margin-bottom: 1rem;
+            gap: 0.75rem;
             max-width: 75%;
+            align-self: flex-start;
+            align-items: flex-end;
         }
         .message.mine {
             align-self: flex-end;
         }
+        
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+        .message.mine .avatar {
+            display: none;
+        }
+        
+        .message-content {
+            display: flex;
+            flex-direction: column;
+        }
+
         .message-bubble {
             padding: 0.75rem 1rem;
             border-radius: 18px;
-            background-color: var(--bg-color);
+            background-color: var(--bubble-bg);
+            word-wrap: break-word;
+            text-align: left;
         }
         .message.mine .message-bubble {
             background-color: var(--accent);
-            color: var(--surface-color);
+            color: white;
+            border-radius: 18px 18px 5px 18px;
         }
+        .message:not(.mine) .message-bubble {
+            border-radius: 18px 18px 18px 5px;
+        }
+        
         .message-sender {
             font-size: 0.8em;
             font-weight: 600;
             color: var(--text-secondary);
             margin-bottom: 0.25rem;
+            text-align: left;
         }
 
         #form {
             display: flex;
+            align-items: center;
             padding: 1rem;
             border-top: 1px solid var(--border);
+            background-color: var(--surface-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
         #message-input {
             flex-grow: 1;
             padding: 0.75rem;
-            border: 1px solid var(--border);
+            border: none;
             border-radius: 18px;
-            background-color: var(--bg-color);
+            background-color: var(--bubble-bg);
             color: var(--text-primary);
             margin-right: 0.5rem;
+        }
+        #message-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--accent);
         }
         #send-btn {
             padding: 0.75rem 1rem;
             border: none;
             background-color: var(--accent);
-            color: var(--surface-color);
+            color: white;
             border-radius: 18px;
             cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        #send-btn:active {
+            transform: scale(0.95);
         }
         
         .hidden {
@@ -237,10 +291,10 @@
             };
 
             let db, auth, userId, displayName;
-            
             const appName = 'chat-app'; 
-            
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-instance-id';
+            const combinedAppId = `${appName}-${appId}`;
+            const avatarColors = ['#e53935', '#d81b60', '#8e24aa', '#5e35b1', '#3949ab', '#1e88e5', '#039be5', '#00acc1', '#00897b', '#43a047', '#7cb342', '#c0ca33', '#fdd835', '#ffb300', '#fb8c00', '#f4511e', '#6d4c41', '#757575', '#546e7a'];
 
             try {
                 const firebaseConfig = JSON.parse(window.__firebase_config);
@@ -252,18 +306,41 @@
                 alert("Could not connect to the service. Have you pasted your firebaseConfig keys?");
             }
 
-            ui.joinBtn.addEventListener('click', async () => {
-                displayName = ui.nameInput.value.trim();
-                if (!displayName) {
+            // --- Event Listeners ---
+
+            ui.joinBtn.addEventListener('click', () => {
+                const name = ui.nameInput.value.trim();
+                if (name) {
+                    displayName = name;
+                    localStorage.setItem('chatDisplayName', displayName);
+                    initChat();
+                } else {
                     alert("Please enter a name.");
-                    return;
                 }
+            });
+            
+            ui.form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const messageText = ui.messageInput.value.trim();
+                if (!messageText) return;
                 
+                ui.sendBtn.disabled = true;
+                // --- FIX: Clear input immediately ---
+                ui.messageInput.value = '';
+
+                await sendMessage({ text: messageText });
+                
+                ui.sendBtn.disabled = false;
+                ui.messageInput.focus();
+            });
+
+            // --- Core Functions ---
+
+            function initChat() {
                 ui.loginContainer.classList.add('hidden');
                 ui.chatContainer.classList.remove('hidden');
-
-                await signInAndStart();
-            });
+                signInAndStart();
+            }
 
             async function signInAndStart() {
                 try {
@@ -276,38 +353,30 @@
                     });
                 } catch (error) {
                     console.error("Authentication Error:", error);
-                    alert("Authentication failed. Please ensure your Firebase configuration is correct and you have enabled Anonymous Authentication in your Firebase project console.");
-                    ui.messageInput.disabled = true;
-                    ui.sendBtn.disabled = true;
-                    ui.messageInput.placeholder = "Authentication failed.";
+                    alert("Authentication failed.");
                 }
             }
 
-            ui.form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const messageText = ui.messageInput.value.trim();
-
-                if (messageText && userId) {
-                    try {
-                        await addDoc(collection(db, `artifacts/${appName}/${appId}/public/data/messages`), {
-                            text: messageText,
-                            sender: displayName,
-                            uid: userId,
-                            createdAt: serverTimestamp()
-                        });
-                        ui.messageInput.value = '';
-                    } catch (error) {
-                         console.error("Error sending message:", error);
-                         alert("Could not send message.");
-                    }
-                } else if (!userId) {
+            async function sendMessage(messageData) {
+                if (!userId) {
                     console.error("Cannot send message, user is not authenticated.");
-                    alert("Cannot send message. You are not connected to the chat service.");
+                    return;
                 }
-            });
+                try {
+                    await addDoc(collection(db, `artifacts/${combinedAppId}/public/data/messages`), {
+                        ...messageData,
+                        sender: displayName,
+                        uid: userId,
+                        createdAt: serverTimestamp()
+                    });
+                } catch (error) {
+                     console.error("Error sending message:", error);
+                     alert("Could not send message.");
+                }
+            }
 
             function listenForMessages() {
-                const messagesRef = collection(db, `artifacts/${appName}/${appId}/public/data/messages`);
+                const messagesRef = collection(db, `artifacts/${combinedAppId}/public/data/messages`);
                 const q = query(messagesRef, orderBy("createdAt"));
 
                 onSnapshot(q, (snapshot) => {
@@ -315,29 +384,7 @@
                     
                     snapshot.docChanges().forEach(change => {
                         if (change.type === "added") {
-                            const data = change.doc.data();
-                            const messageDiv = document.createElement('div');
-                            messageDiv.classList.add('message');
-                            if (data.uid === userId) {
-                                messageDiv.classList.add('mine');
-                            }
-
-                            const bubble = document.createElement('div');
-                            bubble.classList.add('message-bubble');
-
-                            if (data.uid !== userId) {
-                                const sender = document.createElement('div');
-                                sender.classList.add('message-sender');
-                                sender.textContent = data.sender;
-                                bubble.appendChild(sender);
-                            }
-                            
-                            const text = document.createElement('div');
-                            text.textContent = data.text;
-                            bubble.appendChild(text);
-
-                            messageDiv.appendChild(bubble);
-                            ui.messages.appendChild(messageDiv);
+                            renderMessage(change.doc.data());
                         }
                     });
 
@@ -345,6 +392,58 @@
                         ui.messages.scrollTop = ui.messages.scrollHeight;
                     }
                 });
+            }
+            
+            function getUserColor(uid) {
+                let hash = 0;
+                for (let i = 0; i < uid.length; i++) {
+                    hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                return avatarColors[Math.abs(hash) % avatarColors.length];
+            }
+
+            function renderMessage(data) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                if (data.uid === userId) {
+                    messageDiv.classList.add('mine');
+                }
+
+                const avatar = document.createElement('div');
+                avatar.classList.add('avatar');
+                avatar.textContent = data.sender.charAt(0).toUpperCase();
+                avatar.style.backgroundColor = getUserColor(data.uid);
+                messageDiv.appendChild(avatar);
+                
+                const messageContent = document.createElement('div');
+                messageContent.classList.add('message-content');
+
+                const sender = document.createElement('div');
+                sender.classList.add('message-sender');
+                sender.textContent = data.sender;
+                if(data.uid !== userId) {
+                    messageContent.appendChild(sender);
+                }
+
+                const bubble = document.createElement('div');
+                bubble.classList.add('message-bubble');
+
+                if (data.text) {
+                    const text = document.createElement('div');
+                    text.textContent = data.text;
+                    bubble.appendChild(text);
+                }
+
+                messageContent.appendChild(bubble);
+                messageDiv.appendChild(messageContent);
+                ui.messages.appendChild(messageDiv);
+            }
+
+            // --- Initial Load ---
+            const savedName = localStorage.getItem('chatDisplayName');
+            if (savedName) {
+                displayName = savedName;
+                initChat();
             }
         });
     </script>
